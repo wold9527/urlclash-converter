@@ -2,7 +2,6 @@
 // GitHub: https://github.com/siiway/subconverter-snippet
 // Only for education and study use.
 // 本工具仅提供 URL 和 Clash Config 的配置文件格式转换，不存储任何信息，不提供任何代理服务，一切使用产生后果由使用者自行承担，SiiWay Team 及开发本工具的成员不负任何责任.
-// Generated at: not-yet-generated (UTC)
 
 const REPO = 'REPOPLACEHOLDER';  // 构建时自动替换
 const CORE_URL = `https://github.com/${REPO}/releases/download/latest/converter.js`;

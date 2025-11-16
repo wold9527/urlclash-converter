@@ -1,4 +1,4 @@
-name: Build & Release
+name: Build Artifacts
 
 on:
   push:
@@ -30,22 +30,17 @@ jobs:
         run: |
           # 获取日期时间 (UTC)
           UTC_TIME=$(TZ=UTC date '+%Y-%m-%d %H:%M:%S')
-          UTC_DATE=$(TZ=UTC date '+%Y-%m-%d')
           echo "UTC_TIME=$UTC_TIME" >> $GITHUB_OUTPUT
-          echo "UTC_DATE=$UTC_DATE" >> $GITHUB_OUTPUT
-          # 进行替换 Repo
-          REPO="${{ github.repository }}"
 
-          sed -i "s|REPOPLACEHOLDER|\$REPO|g" src/snippet.js
-          sed -i "s|REPOPLACEHOLDER|\$REPO|g" src/frontend.html
-          sed -i "s|not-yet-generated|\$UTC_TIME|g" src/snippet.js
-          sed -i "s|not-yet-generated|\$UTC_TIME|g" src/frontend.html
+          # 进行替换 Repo
+          sed -i "s|REPOPLACEHOLDER|\${{ github.repository }}|g" src/snippet.js
+          sed -i "s|REPOPLACEHOLDER|\${{ github.repository }}|g" src/frontend.html
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "Build ${{ steps.inject_core.outputs.UTC_DATE }}"
+          name: "Build ${{ steps.inject_core.outputs.UTC_TIME }}"
           files: |
             src/snippet.js
             src/frontend.html
@@ -53,7 +48,10 @@ jobs:
           draft: false
           prerelease: false
           body: |
-            在 **${{ steps.inject_core.outputs.UTC_TIME }}** (UTC 时间) 的自动构建
-            配置 Repo: **${{ github.repository }}**
-            Testing.
-            TODO: 文件说明
+            在 **${{ steps.inject_core.outputs.UTC_TIME }}** *(UTC 时间)* 的自动构建
+            配置的目标仓库: **`${{ github.repository }}`**
+            **请不要 删除 / Private 此仓库或 Release, 否则生成的 `snippet.js` 和 `frontend.html` 将无法使用!**
+            ---
+            - `snippet.js`: **上传到 Cloudflare Snippets 的 Snippet 文件**
+            - `frontend.html`: 配合 `snippet.js` 使用的前端文件 (也可单独使用)
+            - `converter.js`: *打包后的转换器核心逻辑*
