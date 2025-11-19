@@ -32,9 +32,8 @@ jobs:
           UTC_TIME=$(TZ=UTC date '+%Y-%m-%d %H:%M:%S')
           echo "UTC_TIME=$UTC_TIME" >> $GITHUB_OUTPUT
 
-          # 进行替换 Repo
-          sed -i "s|siiway/subconverter-snippet|\${{ github.repository }}|g" src/snippet.js
-          sed -i "s|siiway/subconverter-snippet|\${{ github.repository }}|g" src/frontend.html
+          # 替换 Repo
+          sed -i "s|Repo-Placeholder|\${{ github.repository }}|g" src/snippet.js
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -50,13 +49,13 @@ jobs:
           body: |
             在 **${{ steps.inject_core.outputs.UTC_TIME }}** *(UTC 时间)* 的自动构建
             配置的目标仓库: **`${{ github.repository }}`**
-            **请不要 删除 / Private 此仓库或 Release, 否则生成的 `snippet.js` 和 `frontend.html` 将无法使用!**
+            **请不要 删除 / Private 此仓库或 Release, 否则生成的 `snippet.js` 将无法使用!**
 
             ---
 
-            - `snippet.js`: **上传到 Cloudflare Snippets 的 Snippet 文件**
-            - `frontend.html`: 配合 `snippet.js` 使用的前端文件 (也可单独使用)
-            - `converter.js`: *打包后的转换器核心逻辑*
+            - `snippet.js`: **上传到 Cloudflare Snippets 的 Snippet 文件**, 用于反代其他两个文件和提供 API 服务
+            - `frontend.html`: 配合 `converter.js` 使用的前端文件 *(需要有 `converter.js` 在同一目录下)*
+            - `converter.js`: 打包后的转换器核心逻辑
 
             ---
 

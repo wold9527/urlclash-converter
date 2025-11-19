@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// GitHub: siiway / subconverter-snippet
+// GitHub: https://github.com/siiway/subconverter-snippet
 // Only for education and study use.
 // 本工具仅提供 URL 和 Clash Config 的配置文件格式转换，不存储任何信息，不提供任何代理服务，一切使用产生后果由使用者自行承担，SiiWay Team 及开发本工具的成员不负任何责任.
 
-const REPO = 'siiway/subconverter-snippet';
-const CORE_URL = `https://github.com/${REPO}/releases/download/latest/converter.js`;
-const HTML_URL = `https://github.com/${REPO}/releases/download/latest/frontend.html`;
+var REPO = 'Repo-Placeholder';
+REPO = REPO === 'Repo' + '-Placeholder' ? 'siiway/subconverter-snippet' : REPO;
+
+var BASE_URL = `https://github.com/${REPO}/releases/download/latest`;
+var CORE_URL = `${BASE_URL}/converter.js`;
+var HTML_URL = `${BASE_URL}/frontend.html`;
 
 export default {
     async fetch(request) {
@@ -17,11 +20,6 @@ export default {
             const htmlResp = await fetch(HTML_URL + '?v=' + Date.now());
             if (!htmlResp.ok) return new Response(`HTML load failed, code: ${htmlResp.status}`, { status: 500 });
             let html = await htmlResp.text();
-            // 替换 JS 路径为本地反代
-            html = html.replace(
-                /https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\/latest\/converter.js/g,
-                '/converter.js'
-            );
             return new Response(html, {
                 headers: { 'Content-Type': 'text/html; charset=utf-8' }
             });

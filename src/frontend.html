@@ -1,6 +1,6 @@
 <!--
 SPDX-License-Identifier: GPL-3.0-or-later
-GitHub: siiway / subconverter-snippet
+GitHub: https://github.com/siiway/subconverter-snippet
 Only for education and study use.
 本工具仅提供 URL 和 Clash Config 的配置文件格式转换，不存储任何信息，不提供任何代理服务，一切使用产生后果由使用者自行承担，SiiWay Team 及开发本工具的成员不负任何责任.
 -->
@@ -22,11 +22,10 @@ Only for education and study use.
 
 <body class="h-full bg-gray-50">
   <div class="min-h-full flex flex-col">
-    <!-- 标题栏 -->
     <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-6 shadow-lg">
       <div class="max-w-6xl mx-auto px-6">
-        <h1 class="text-3xl font-bold">Clash ↔ 订阅链接 互转神器</h1>
-        <p class="mt-2 opacity-90">支持 proxies / payload / proxy-providers · 零字段丢失 · 2025 最新标准</p>
+        <h1 class="text-3xl font-bold">Clash ↔ 订阅链接 转换工具</h1>
+        <p class="mt-2 opacity-90">支持格式: proxies / payload (Proxy Providers) / 不带前缀的节点列表 | GitHub: <a href="https://github.com/siiway/subconverter-snippet">siiway/subconverter-snippet</a> | <a href="https://github.com/siiway/subconverter-snippet/blob/main/api.md">API 文档</a></p>
       </div>
     </div>
 
@@ -34,18 +33,20 @@ Only for education and study use.
       <!-- 左侧：Clash 配置 -->
       <div class="space-y-4">
         <div class="flex items-center justify-between">
-          <h2 class="text-2xl font-semibold text-gray-800">Clash 配置（支持 payload）</h2>
-          <button id="paste-clash"
-            class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition text-sm">粘贴</button>
+          <h2 class="text-2xl font-semibold text-gray-800">Clash 配置</h2>
+          <div class="flex gap-2">
+            <button id="paste-clash"
+              class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition text-sm">粘贴</button>
+            <button id="copy-clash"
+              class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm">复制</button>
+          </div>
         </div>
         <textarea id="clash-input"
           class="w-full h-96 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           placeholder="粘贴 Clash 配置或 proxy-provider 内容，支持 proxies: / payload: / 直接 - 开头"></textarea>
-        <div class="flex gap-3">
-          <button id="to-links"
-            class="flex-1 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">Clash →
-            订阅链接</button>
-        </div>
+        <button id="to-links"
+          class="w-full py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">Clash →
+          订阅链接</button>
       </div>
 
       <!-- 右侧：订阅链接 -->
@@ -63,7 +64,6 @@ Only for education and study use.
           class="w-full h-96 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           placeholder="每行一个订阅链接（ss:// vmess:// vless:// trojan:// 等）"></textarea>
 
-        <!-- 输出格式选择 -->
         <div class="bg-white border border-gray-200 rounded-lg p-4">
           <p class="text-sm font-medium text-gray-700 mb-3">输出 Clash 格式：</p>
           <div class="grid grid-cols-3 gap-3">
@@ -74,24 +74,21 @@ Only for education and study use.
             </label>
             <label class="flex items-center space-x-2 cursor-pointer">
               <input type="radio" name="output-mode" value="payload" class="text-purple-600 focus:ring-purple-500">
-              <span class="text-sm font-medium text-purple-700">payload:（推荐）</span>
+              <span class="text-sm">payload:</span>
             </label>
             <label class="flex items-center space-x-2 cursor-pointer">
               <input type="radio" name="output-mode" value="none" class="text-gray-600 focus:ring-gray-500">
-              <span class="text-sm">无前缀（追加用）</span>
+              <span class="text-sm">无前缀</span>
             </label>
           </div>
         </div>
 
-        <div class="flex gap-3">
-          <button id="to-clash"
-            class="flex-1 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium">订阅链接 →
-            Clash 配置</button>
-        </div>
+        <button id="to-clash"
+          class="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium">订阅链接 →
+          Clash 配置</button>
       </div>
     </div>
 
-    <!-- 结果展示区 -->
     <div class="max-w-6xl mx-auto w-full px-6 pb-8">
       <div id="result" class="hidden mt-6 p-6 bg-green-50 border-2 border-green-300 rounded-lg">
         <pre id="result-text" class="text-sm whitespace-pre-wrap"></pre>
@@ -104,55 +101,53 @@ Only for education and study use.
   </div>
 
   <script type="module">
-    import { clashToLink, linkToClash } from "./converter.ts";
+    import { clashToLink, linkToClash } from "./converter.js";
 
     const clashInput = document.getElementById("clash-input");
     const linksInput = document.getElementById("links-input");
     const result = document.getElementById("result");
     const resultText = document.getElementById("result-text");
 
-    // Clash → 链接
     document.getElementById("to-links").onclick = () => {
       const yaml = clashInput.value.trim();
       if (!yaml) return alert("请先输入 Clash 配置");
       const links = clashToLink(yaml);
       linksInput.value = links;
-      showResult(links, "转换成功！已生成订阅链接");
+      showResult(links, "Clash → 订阅链接 转换完成");
     };
 
-    // 链接 → Clash
     document.getElementById("to-clash").onclick = () => {
-      const links = linksInput.value.trim().split("\n").filter(Boolean);
-      if (links.length === 0) return alert("请先输入订阅链接");
+      const lines = linksInput.value.trim().split("\n").filter(Boolean);
+      if (lines.length === 0) return alert("请先输入订阅链接");
       const mode = document.querySelector('input[name="output-mode"]:checked').value;
-      const yaml = linkToClash(links, mode);
+      const yaml = linkToClash(lines, mode);
       clashInput.value = yaml;
-      showResult(yaml, `转换成功！已生成 ${mode === "payload" ? "proxy-provider 推荐格式 (payload:)" : mode === "proxies" ? "标准 proxies:" : "无前缀节点列表"}`);
+      const modeText = mode === "payload" ? "payload:" : mode === "proxies" ? "proxies:" : "无前缀节点列表";
+      showResult(yaml, `订阅链接 → Clash 转换完成（${modeText}）`);
     };
 
-    // 复制结果
-    document.getElementById("copy-result").onclick = () => {
-      navigator.clipboard.writeText(resultText.textContent);
-      alert("已复制到剪贴板！");
+    // 复制功能
+    const copy = (text, msg) => {
+      navigator.clipboard.writeText(text).then(() => alert(msg || "已复制到剪贴板"));
     };
+    document.getElementById("copy-clash").onclick = () => copy(clashInput.value, "Clash 配置复制成功");
+    document.getElementById("copy-links").onclick = () => copy(linksInput.value, "订阅链接复制成功");
+    document.getElementById("copy-result").onclick = () => copy(resultText.textContent);
 
-    document.getElementById("copy-links").onclick = () => {
-      navigator.clipboard.writeText(linksInput.value);
-      alert("订阅链接已复制！");
+    // 粘贴功能
+    const paste = async (el) => {
+      try {
+        el.value = await navigator.clipboard.readText();
+      } catch { alert("粘贴失败，请手动粘贴"); }
     };
+    document.getElementById("paste-clash").onclick = () => paste(clashInput);
+    document.getElementById("paste-links").onclick = () => paste(linksInput);
 
-    // 一键粘贴
-    document.getElementById("paste-clash").onclick = async () => {
-      clashInput.value = await navigator.clipboard.readText();
-    };
-    document.getElementById("paste-links").onclick = async () => {
-      linksInput.value = await navigator.clipboard.readText();
-    };
-
-    function showResult(text, title = "成功") {
-      result.classList.remove("hidden");
+    function showResult(text, title) {
       resultText.textContent = text;
-      document.querySelector("#result > div").innerHTML = `<strong class="text-green-800">${title}</strong>`;
+      result.querySelector("div").innerHTML = `<strong class="text-green-800 text-lg">${title}</strong>`;
+      result.classList.remove("hidden");
+      result.scrollIntoView({ behavior: "smooth" });
     }
   </script>
 </body>
