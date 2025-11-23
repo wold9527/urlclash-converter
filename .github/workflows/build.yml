@@ -1,4 +1,4 @@
-name: Build Artifacts,
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -6,75 +6,55 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
 
-      - name: Setup Node
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: "22"
+          cache: "npm"
 
       - name: Install Dependencies
         run: |
           npm init -y
-          npm install typescript --save-dev
+          npm install typescript esbuild @types/node --save-dev
 
-      - name: Bundle with esbuild
+      - name: Build converter.bundle.js
         run: |
-          npm install esbuild --no-save
           npx esbuild src/converter.ts \
             --bundle \
             --format=esm \
             --platform=browser \
             --target=es2022 \
             --minify \
-            --sourcemap \
+            --sourcemap=inline \
             --outfile=dist/converter.bundle.js \
-            --define:process.env.NODE_ENV=\"production\" \
-            --banner:js="// SPDX-License-Identifier: GPL-3.0-or-later\\n// Build: ${{ github.sha }} @ $(date -u '+%Y-%m-%d %H:%M:%S UTC')\\n// Repo: https://github.com/siiway/subconverter-snippet"
+            --banner:js="// Build: ${{ github.sha }} - Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC') - Repo: https://github.com/${{ github.repository }} - License: GPL-v3"
 
-      - id: inject_core
-        name: Inject CORE_URL & Get Time
+      - name: Build frontend.html
         run: |
-          # 获取日期时间 (UTC)
-          UTC_TIME=$(TZ=UTC date '+%Y-%m-%d %H:%M:%S')
-          echo "UTC_TIME=$UTC_TIME" >> $GITHUB_OUTPUT
+          mkdir -p dist
+          sed 's|./converter.bundle.js|/converter.bundle.js|g' src/frontend.html > dist/index.html
 
-          # 替换 Repo
-          sed -i "s|Repo-Placeholder|\${{ github.repository }}|g" src/snippet.js
-      
-      - name: Delete old latest release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Copy static assets (if any)
         run: |
-          gh release delete latest --yes || true
-          gh api repos/${{ github.repository }}/git/refs/tags/latest -X DELETE || true
+          cp -r dist/*.js dist/ 2>/dev/null || true
+          cp src/converter.bundle.js dist/converter.bundle.js 2>/dev/null || true
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          tag_name: latest
-          name: "Build @ ${{ steps.inject_core.outputs.UTC_TIME }}"
-          files: |
-            dist/converter.bundle.js
-            src/frontend.html
-            src/snippet.js
-          draft: false
-          prerelease: false
-          preserve_order: true
-          body: |
-            在 **${{ steps.inject_core.outputs.UTC_TIME }}** *(UTC 时间)* 的自动构建
-            配置的目标仓库: **`${{ github.repository }}`**
-            **请不要 删除 / Private 此仓库或 Release, 否则生成的 `snippet.js` 将无法使用!**
+          path: dist/
 
-            ---
-
-            - `snippet.js`: **上传到 Cloudflare Snippets 的 Snippet 文件**, 用于反代其他两个文件和提供 API 服务
-            - `frontend.html`: 配合 `converter.bundle.js` 使用的前端文件 *(需要有 `converter.bundle.js` 在同一目录下)*
-            - `converter.bundle.js`: 打包后的转换器核心逻辑
-
-            ---
-
-            部署 & 使用详见仓库 README.md
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
